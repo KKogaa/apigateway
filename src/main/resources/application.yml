@@ -1,0 +1,92 @@
+server:
+  port: 8080
+
+eureka:
+  instance:
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://ec2-50-16-212-46.compute-1.amazonaws.com:8761/eureka/}
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+
+
+      discovery.locator:
+        enabled: True
+        lowerCaseServiceId: True
+      routes:
+        - id: chat-service
+          uri: lb://CONSULTA-SERVICE
+          predicates:
+            - Path=/chat-service/**
+          filters:
+            - RewritePath=/chat-service/(?<segment>.*), /$\{segment}
+      #   - id: ema-service
+      #     uri: lb://EMA-SERVICE
+      #     predicates:
+      #       - Path=/ema-service/**
+      #     filters:
+      #       - RewritePath=/ema-service/(?<segment>.*), /$\{segment}
+      #   - id: inf-service
+      #     uri: lb://INF-SERVICE
+      #     predicates:
+      #       - Path=/inf-service/**
+      #     filters:
+      #       - RewritePath=/inf-service/(?<segment>.*), /$\{segment}
+      #   - id: chatbot-service
+      #     uri: lb://CHATBOT-SERVICE
+      #     predicates:
+      #       - Path=/chatbot-service/**
+      #     filters:
+      #       - RewritePath=/chatbot-service/(?<segment>.*), /$\{segment}
+      #   - id: bert-service
+      #     uri: lb://BERT-SERVICE
+      #     predicates:
+      #       - Path=/bert-service/**
+      #     filters:
+      #       - RewritePath=/bert-service/(?<segment>.*), /$\{segment}
+
+  # security:
+  #   oauth2:
+  #     client:
+  #       registration:
+  #         github:
+  #           clientId: 57ec6c28aefe7c198f4e
+  #           clientSecret: c88046710ebafead02a61971ca706b5c99c0fd6d
+  
+  # security:
+  #   oauth2:
+  #     client:
+  #       provider:
+  #         my-keycloak-provider:
+  #           issuer-uri: http://localhost:8080/auth/realms/My-Realm
+
+  #       registration:
+  #         keycloak-spring-gateway-client:
+  #              provider: my-keycloak-provider
+  #              client-id: spring-gateway-client
+  #              client-secret: 1935d104-74c8-41b1-ac83-8e621c66bb26
+  #              authorization-grant-type: authorization_code
+  #              redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+
+management.endpoint.gateway.enabled: True
+management.endpoints.web.exposure.include:
+  gateway
+
+jwt:
+  secret: BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3pb7ARo0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY
+  expiration: 86400
