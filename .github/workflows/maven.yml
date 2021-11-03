@@ -1,26 +1,44 @@
 # This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
-
-name: Java CI with Maven
-
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
+
+name: Deploy to Amazon EC2
 
 jobs:
-  build:
-
+  deploy:
+    name: Deploy
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v1
+
     - name: Set up JDK 11
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v1
       with:
-        java-version: '11'
-        distribution: 'adopt'
-        cache: maven
+        java-version: 11
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn clean package
+      
+    - name: Publish to Docker Hub
+      uses: docker/build-push-action@v1     
+      with:
+       username: ${{ secrets.DOCKER_HUB_USERNAME }}
+       password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+       repository: kkogaa/apigateway
+       tags: latest
+       
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          sudo docker pull kkogaa/apigateway
+          sudo docker stop apigateway
+          sudo docker rm apigateway
+          sudo docker run --name=apigateway -d -p 80:8080 kkogaa/apigateway
