@@ -41,4 +41,4 @@ jobs:
           sudo docker pull kkogaa/apigateway
           sudo docker stop apigateway
           sudo docker rm apigateway
-          sudo docker run --name=apigateway -d -p 80:8443 kkogaa/apigateway
+          sudo docker run --name=apigateway -d -p 8443:8443 kkogaa/apigateway
